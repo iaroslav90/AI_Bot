@@ -60,3 +60,8 @@ async def root(item: Item):
 
     elif item.name == 'grid':
         data = item.data
+
+
+@app.post("/test")
+async def root():
+    return "connection is okay."
