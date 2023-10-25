@@ -47,11 +47,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.post("/model")
 async def root(item: Item):
     if item.name == 'direction':
         data = item.data
         x = torch.tensor([data], dtype=torch.float32).to(device)
+        x = (x - x[0,-1]) / x.std()
         y = nn.Sigmoid()(direction_model(x)).item()
         if y > 0.5:
             return {"direction" : "buy"}
