@@ -57,3 +57,6 @@ async def root(item: Item):
             return {"direction" : "buy"}
         else:
             return {"direction" : "sell"}
+
+    elif item.name == 'grid':
+        data = item.data
