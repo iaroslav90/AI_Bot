@@ -92,7 +92,7 @@ async def root(item: Item):
             x = torch.tensor([data[:240]], dtype=torch.float32).view(1, 4, 60).transpose(1, 2).to(device)
             d = (x.max() - x.min()) / 5
             xx = (x - x[0, -1, 3]) / d
-            y = (minmax_model(xx)[0] * d).cpu().numpy()
+            y = (minmax_model(xx)[0] * d).detach().cpu().numpy()
             return "%f,%f" % (max(y[0], 0) + data[-1], min(y[1], 0) + data[-1])
     except:
         return "Failed"
