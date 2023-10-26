@@ -6,6 +6,28 @@ from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 
 
+
+class Dense_v2(nn.Module):
+    def __init__(self):
+        super(Dense_v2, self).__init__()
+
+        self.hidden_layer = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(240, 512),
+            nn.ReLU(),
+            nn.Linear(512, 512),
+            nn.ReLU(),
+            nn.Linear(512, 512),
+            nn.ReLU(),
+            nn.Linear(512, 64),
+            nn.ReLU(),
+            nn.Linear(64, 2),
+        )
+
+    def forward(self, x):
+        return self.hidden_layer(x)
+
+
 class Dense_direction_v1(nn.Module):
     def __init__(self):
         super(Dense_direction_v1, self).__init__()
@@ -32,6 +54,10 @@ direction_model = Dense_direction_v1()
 direction_model.load_state_dict(torch.load('models/direction.pth', map_location=device))
 direction_model.eval()
 
+minmax_model = Dense_v2()
+minmax_model.load_state_dict(torch.load('models/minmax.pth', map_location=device))
+minmax_model.eval()
+
 
 class Item(BaseModel):
     name: str
@@ -50,20 +76,26 @@ app.add_middleware(
 
 @app.post("/model")
 async def root(item: Item):
-    if item.name == 'direction':
-        data = item.data
-        x = torch.tensor([data], dtype=torch.float32).to(device)
-        x = (x - x[0,-1]) / x.std()
-        y = nn.Sigmoid()(direction_model(x)).item()
-        if y > 0.5:
-            return {"direction" : "buy"}
-        else:
-            return {"direction" : "sell"}
+    try:
+        if item.name == 'direction':
+            data = item.data
+            x = torch.tensor([data], dtype=torch.float32).to(device)
+            x = (x - x[0,-1]) / x.std()
+            y = nn.Sigmoid()(direction_model(x)).item()
+            if y > 0.5:
+                return "buy"
+            else:
+                return "sell"
 
-    elif item.name == 'grid':
-        data = item.data
+        elif item.name == 'grid':
+            data = item.data
+            x = torch.tensor([data], dtype=torch.float32).view(1, 4, 60).transpose(1, 2).to(device)
+            y = minmax_model(x).cpu().numpy()[0]
+            return y
+    except:
+        return "Failed"
 
 
-@app.post("/test")
+@app.get("/")
 async def root():
     return "connection is okay."
