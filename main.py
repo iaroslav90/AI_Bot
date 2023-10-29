@@ -59,11 +59,6 @@ minmax_model.load_state_dict(torch.load('models/minmax.pth', map_location=device
 minmax_model.eval()
 
 
-class Item(BaseModel):
-    name: str
-    data: list = []
-
-
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -73,9 +68,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/")
+async def root():
+    return "connection is okay."
+
+class ModelItem(BaseModel):
+    name: str
+    data: list = []
 
 @app.post("/model")
-async def root(item: Item):
+async def root(item: ModelItem):
     try:
         if item.name == 'direction':
             data = item.data
@@ -97,7 +99,14 @@ async def root(item: Item):
     except:
         return "Failed"
 
+class LicenseItem(BaseModel):
+    mail: str
+    account: int
 
-@app.get("/")
-async def root():
-    return "connection is okay."
+
+@app.post("/license")
+async def root(item: LicenseItem):
+    if item.mail == 'ok@gmail.com':
+        return "ok"
+    else:
+        return "no"
