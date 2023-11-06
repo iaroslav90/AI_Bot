@@ -1,4 +1,7 @@
+from datetime import datetime
+import json
 import numpy as np
+import pandas as pd
 import torch
 import torch.nn as nn
 from fastapi import FastAPI
@@ -131,14 +134,38 @@ async def root(item: ModelItem):
     except:
         return "Failed"
 
+
+with open('accounts.json', 'r') as f:
+    accounts = json.load(f)
+
 class LicenseItem(BaseModel):
     mail: str
-    account: int
+    account: str
 
 
 @app.post("/license")
 async def root(item: LicenseItem):
-    if item.mail == 'ok@gmail.com':
-        return "ok"
-    else:
-        return "no"
+    license = pd.read_csv('clients.csv')
+
+    if len(license.index[license['payment Email'] == "abcxyz@gmail.com" ].tolist()) == 0:
+        return "false,not registered email,"
+
+    idx = license.index[license['payment Email'] == "abcxyz@gmail.com" ].tolist()[0]
+    date = license['Date of Expiry'].loc[idx]
+
+    if datetime.now().strftime("%Y.%m.%d") > license['Date of Expiry'].loc[idx]:
+        return "false,license expired,"
+
+    if item.mail not in accounts:
+        accounts[item.mail] = []
+    if item.account not in accounts[item.mail] and len(accounts[item.mail]) >= 5:
+        return "false,this email is used for more than 5 accounts,"
+    if item.account not in accounts[item.mail] >= 5:
+        accounts[item.mail].append(item.account)
+        try:
+            with open('accounts.json', 'w') as f:
+                json.dump(accounts, f, indent=4)
+        except:
+            pass
+    
+    return "ok,%s,%s" % (license['Date of Expiry'].loc[idx], len(accounts[item.mail]))
