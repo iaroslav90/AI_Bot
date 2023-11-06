@@ -147,10 +147,10 @@ class LicenseItem(BaseModel):
 async def root(item: LicenseItem):
     license = pd.read_csv('clients.csv')
 
-    if len(license.index[license['payment Email'] == "abcxyz@gmail.com" ].tolist()) == 0:
+    if len(license.index[license['Payment Email'] == item.mail].tolist()) == 0:
         return "false,not registered email,"
 
-    idx = license.index[license['payment Email'] == "abcxyz@gmail.com" ].tolist()[0]
+    idx = license.index[license['Payment Email'] == item.mail].tolist()[0]
     date = license['Date of Expiry'].loc[idx]
 
     if datetime.now().strftime("%Y.%m.%d") > license['Date of Expiry'].loc[idx]:
@@ -160,7 +160,7 @@ async def root(item: LicenseItem):
         accounts[item.mail] = []
     if item.account not in accounts[item.mail] and len(accounts[item.mail]) >= 5:
         return "false,this email is used for more than 5 accounts,"
-    if item.account not in accounts[item.mail] >= 5:
+    if item.account not in accounts[item.mail]:
         accounts[item.mail].append(item.account)
         try:
             with open('accounts.json', 'w') as f:
