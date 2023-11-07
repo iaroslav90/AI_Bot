@@ -7,6 +7,8 @@ import torch.nn as nn
 from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
+from ftplib import FTP
+from io import BytesIO, StringIO
 
 
 
@@ -145,7 +147,16 @@ class LicenseItem(BaseModel):
 
 @app.post("/license")
 async def root(item: LicenseItem):
-    license = pd.read_csv('clients.csv')
+    ftp = FTP('ftp.theauroraai.com') 
+    ftp.login(user='license@theauroraai.com', passwd = 'J,MAR&_welCm')
+    def grabFile(filename):
+        r = BytesIO()
+        ftp.retrbinary('RETR %s' % filename, r.write)
+        return r.getvalue()
+
+    csv_data = grabFile('clients.csv')
+    data = StringIO(csv_data.decode('utf-8'))
+    license = pd.read_csv(data)
 
     if len(license.index[license['Payment Email'] == item.mail].tolist()) == 0:
         return "false,not registered email,"
