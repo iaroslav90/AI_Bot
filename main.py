@@ -149,14 +149,11 @@ class LicenseItem(BaseModel):
 async def root(item: LicenseItem):
     ftp = FTP('ftp.theauroraai.com') 
     ftp.login(user='license@theauroraai.com', passwd = 'J,MAR&_welCm')
-    def grabFile(filename):
-        r = BytesIO()
-        ftp.retrbinary('RETR %s' % filename, r.write)
-        return r.getvalue()
-
-    csv_data = grabFile('clients.csv')
-    data = StringIO(csv_data.decode('utf-8'))
+    r = BytesIO()
+    ftp.retrbinary('RETR clients.csv', r.write)
+    data = StringIO(r.getvalue().decode('utf-8'))
     license = pd.read_csv(data)
+    ftp.close()
 
     if len(license.index[license['Payment Email'] == item.mail].tolist()) == 0:
         return "false,not registered email,"
