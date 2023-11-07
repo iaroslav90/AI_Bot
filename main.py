@@ -156,18 +156,19 @@ async def root(item: LicenseItem):
     ftp.close()
 
     if len(license.index[license['Payment Email'] == item.mail].tolist()) == 0:
-        return "false,not registered email,"
+        return "false,not registered email,,"
 
     idx = license.index[license['Payment Email'] == item.mail].tolist()[0]
     date = license['Date of Expiry'].loc[idx]
+    acc_num = license['Allowed Accounts'].loc[idx]
 
-    if datetime.now().strftime("%Y.%m.%d") > license['Date of Expiry'].loc[idx]:
-        return "false,license expired,"
+    if datetime.now().strftime("%Y.%m.%d") > date:
+        return "false,license expired at %s,," % date
 
     if item.mail not in accounts:
         accounts[item.mail] = []
-    if item.account not in accounts[item.mail] and len(accounts[item.mail]) >= 5:
-        return "false,this email is used for more than 5 accounts,"
+    if item.account not in accounts[item.mail] and len(accounts[item.mail]) >= acc_num:
+        return "false,your license can be used for only %d accounts,," % acc_num
     if item.account not in accounts[item.mail]:
         accounts[item.mail].append(item.account)
         try:
@@ -176,4 +177,4 @@ async def root(item: LicenseItem):
         except:
             pass
     
-    return "ok,%s,%s" % (license['Date of Expiry'].loc[idx], len(accounts[item.mail]))
+    return "ok,%s,%s,%s" % (date, len(accounts[item.mail]), acc_num)
