@@ -46,6 +46,27 @@ class Dense_v2(nn.Module):
         return self.hidden_layer(x)
 
 
+class Dense_v3(nn.Module):
+    def __init__(self):
+        super(Dense_v3, self).__init__()
+
+        self.hidden_layer = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(240, 512),
+            nn.ReLU(),
+            nn.Linear(512, 1024),
+            nn.ReLU(),
+            nn.Linear(1024, 256),
+            nn.ReLU(),
+            nn.Linear(256, 64),
+            nn.ReLU(),
+            nn.Linear(64, 2),
+        )
+
+    def forward(self, x):
+        return self.hidden_layer(x)
+
+
 class Dense_direction_v1(nn.Module):
     def __init__(self):
         super(Dense_direction_v1, self).__init__()
@@ -80,8 +101,8 @@ sl_model = Dense_v1()
 sl_model.load_state_dict(torch.load('models/sl_model.pth', map_location=device))
 sl_model.eval()
 
-delay_model = Dense_v1()
-delay_model.load_state_dict(torch.load('models/sl_model.pth', map_location=device))
+delay_model = Dense_v3()
+delay_model.load_state_dict(torch.load('models/delay_model.pth', map_location=device))
 delay_model.eval()
 
 
